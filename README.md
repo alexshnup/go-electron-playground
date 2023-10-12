@@ -2,7 +2,7 @@
 
 ## JUST FOR FUN
 
-![Just GIF file](https://github.com/alexshnup/go-electron-playground/assets/4953963/43dbaf99-373e-4f53-a1bf-276cc6cc32d1)
+![go-electron-playground](https://github.com/alexshnup/go-electron-playground/assets/4953963/709c801c-df5b-4368-a389-a981992bac5d)
 
 This is a dark-themed Electron application for executing SSH commands with a Golang backend and Websocket for data transfer between Electron and Golang.
 

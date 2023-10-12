@@ -1,0 +1,82 @@
+.DS_Store
+.env
+.gclient_done
+**/.npmrc
+.tags*
+.vs/
+.vscode/
+*.log
+*.pyc
+*.sln
+*.swp
+*.VC.db
+*.VC.VC.opendb
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.xcodeproj
+/.idea/
+/dist/
+node_modules/
+SHASUMS256.txt
+**/package-lock.json
+compile_commands.json
+.envrc
+
+# npm package
+/npm/dist
+/npm/path.txt
+/npm/checksums.json
+
+.npmrc
+
+# Generated API definitions
+electron-api.json
+electron.d.ts
+
+# Spec hash calculation
+spec/.hash
+
+# Eslint Cache
+.eslintcache*
+
+# Generated native addon files
+/spec/fixtures/native-addon/echo/build/
+
+# If someone runs tsc this is where stuff will end up
+ts-gen
+
+# Used to accelerate CI builds
+.depshash
+.depshash-target
+
+# Used to accelerate builds after sync
+patches/mtime-cache.json
+
+spec/fixtures/logo.png
+
+*.secret
+*._go
+
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go-electron-playground

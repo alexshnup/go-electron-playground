@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Electron Playground UI</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <h1>Welcome to Electron Playground UI</h1>
+    <div class="container">
+        <button id="toggleButton" onclick="toggleForm()">Toggle SSH Form</button>
+        <div id="formContainer">
+            <h2>Connect via SSH</h2>
+            <form id="sshForm">
+                <input type="text" id="host" placeholder="Host">
+                <input type="text" id="port" placeholder="Port" value="22">
+                <input type="text" id="user" placeholder="Username">
+                <input type="password" id="password" placeholder="Password">
+                <button type="button" onclick="pickPrivateKeyFile()">Select Private Key File</button>
+                <input type="text" id="keyFilePath" placeholder="Path to Private Key">
+                <input type="password" id="keyPassphrase" placeholder="Key Passphrase (if any)">
+                <!-- checkbox to save ssh params -->
+                <input type="checkbox" id="saveParams" name="saveParams" value="saveParams">
+
+                <button type="button" onclick="connectSSH()">Connect</button>
+            </form>
+        </div>
+
+                <input type="text" id="sshid" placeholder="ID">
+                <input type="text" id="sshcmd" placeholder="Command">
+                <button type="button" onclick="commandSSH()">Run</button>
+
+        <pre id="outputDisplay"></pre>
+        <pre id="logs"></pre>
+    </div>
+    <script>
+
+        window.onload = async function() {
+            try {
+                const params = await window.api.invoke('get-ssh-params');
+                
+                console.log("Parameters to read:", params);
+                
+                if (params) {
+                    document.getElementById('host').value = params.host || "";
+                    document.getElementById('port').value = params.port || "22";
+                    document.getElementById('user').value = params.user || "";
+                    document.getElementById('keyFilePath').value = params.keyFilePath || "";
+                    document.getElementById('saveParams').checked = params.saveParams || false;
+                    // ... and so on for other parameters
+                }
+            } catch (error) {
+                console.error('Error retrieving SSH parameters:', error);
+            }
+        }
+
+        async function pickPrivateKeyFile() {
+        try {
+            const filePath = await window.api.invoke('open-file-dialog');
+            if (filePath) {
+                document.getElementById('keyFilePath').value = filePath;
+            }
+        } catch (error) {
+            console.error('Error picking file:', error);
+        }
+    }
+
+        async function connectSSH() {
+            let host = document.getElementById('host').value;
+            let port = document.getElementById('port').value;
+            let user = document.getElementById('user').value;
+            let password = document.getElementById('password').value;
+            let passphrase = document.getElementById('keyPassphrase').value;
+            // let keyFilePath = document.getElementById('selectedFile').value;
+            let keyFilePath = document.getElementById('keyFilePath').value;
+            //Checkbox saveParams
+            let saveParams = document.getElementById('saveParams').checked;
+
+            const params = {
+                host: host,
+                port: port,
+                user: user,
+                keyFilePath: keyFilePath,
+                saveParams: saveParams,
+                // ... other parameters
+            };
+
+            console.log("Parameters to save:", params);
+
+            // Save SSH parameters 
+            try {
+                const result = await window.api.invoke('save-ssh-params', params);
+                console.log("Invoke result:", result);
+            } catch (error) {
+                console.error('Error invoking save-ssh-params:', error);
+            }
+
+            fetch('http://localhost:8080/sshconnect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    host: host,
+                    port: port,
+                    user: user,
+                    password: password,
+                    keyFilePath: keyFilePath,
+                    keyPassphrase: passphrase, // include the passphrase in the request body
+
+                    saveParams: saveParams,
+
+                    // command: 'playground list-server' // sample command to list servers
+                    command: 'uname -a' // sample test command
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                // TODO: Display data in UI.
+                document.getElementById('sshid').value = data;
+            });
+
+
+            WebSocketlogs()
+        }
+
+
+        async function commandSSH() {
+            let id = document.getElementById('sshid').value;
+            let cmd = document.getElementById('sshcmd').value;
+
+            fetch('http://localhost:8080/sshcommand', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    command: cmd // sample test command
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                // TODO: Display data in UI.
+                document.getElementById('outputDisplay').textContent = data;
+                })
+            .catch(error => {
+                console.error("Error executing SSH command:", error);
+                document.getElementById('outputDisplay').textContent = "Error executing command.";
+            });
+        }
+
+        function WebSocketlogs() {
+            // WebSocket
+            let logContainer = document.getElementById('logs');
+
+            // let socket = new WebSocket('ws://localhost:8080/tail-log');
+                let socket = new WebSocket('ws://localhost:8080/top');
+            socket.onopen = function(event) {
+                console.log('Connected to WebSocket.');
+            };
+
+            socket.onmessage = function(event) {
+                let newLogEntry = document.createElement("div");
+                newLogEntry.textContent = event.data;
+                logContainer.appendChild(newLogEntry);
+                // logContainer.innerHTML = event.data;
+                // Optional: Auto-scroll as new logs appear
+                logContainer.scrollTop = logContainer.scrollHeight;
+            };
+
+            socket.onerror = function(error) {
+                console.error(`WebSocket Error: ${error}`);
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`Closed cleanly, code=${event.code}, reason=${event.reason}`);
+                } else {
+                    console.error('Connection died');
+                }
+            };
+        }
+
+
+        function toggleForm() {
+            const formContainer = document.getElementById('formContainer');
+            const currentHeight = parseInt(window.getComputedStyle(formContainer).getPropertyValue('max-height'));
+
+            if (currentHeight === 0) {
+                formContainer.style.maxHeight = formContainer.scrollHeight + "px";
+            } else {
+                formContainer.style.maxHeight = "0";
+            }
+        }
+    </script>
+  </body>
+</html>
